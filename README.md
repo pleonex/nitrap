@@ -18,4 +18,4 @@ software including devices, flashcards and games.
    1. Flashcard timebombs (0%)
    2. Flashcard anti-updates protection (0%)
    3. Flashcard anti-picary patches (0%)
-   4. Scene flashcard updater anti-updates protection (0%)
+   4. Scene flashcard updater anti-updates protection (70%)

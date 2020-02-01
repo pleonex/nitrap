@@ -25,6 +25,9 @@ code. However, these database are encrypted.
 
 - [ ] Investigate format of anti-piracy database
 - [ ] Investigate format of cheat database
+- [ ] Investigate live-patching auto-detection of DSTT
+- [ ] Investigate anti-piracy detection of _infolib custom kit_
+  - [ ] Compare current DB with patches auto-generated with these tools
 
 ## Scene flashcard updater anti-updates protection
 
@@ -32,8 +35,9 @@ There is a free tool to download the latest game patches. However, it is unknown
 from where it gets the patch database (I cannot find information of the people
 making the patches) and this file is encrypted.
 
-- [ ] Document DS-Scene ROM Tool program
-- [ ] Find URL to download files
-- [ ] Find encryption / decryption algorithms
+- [x] Document DS-Scene ROM Tool program
+- [x] Find URL to download files
+- [x] Find encryption / decryption algorithms
 - [ ] Write programs to parse the DB
-- [ ] Document other files of interest
+- [x] Document other files of interest
+- [ ] Authors and community behind anti-piracy patches
