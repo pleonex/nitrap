@@ -134,3 +134,44 @@ RAM:0215B524 off_215B524 DCD dword_215C1CC           ; DATA XREF: ap_decrypt+10
 ```
 
 This code is in the overlay9_19.
+
+## ARM7 things
+
+- 0x02FFFC3C: it writes a frame counter. It's a shared area (firmware) so ARM9
+  can access.
+
+## Function naming convention
+
+```plain
+<file><flag>_<name>
+file: ov<num> (we assume always from arm9). For ap replace ov for ap
+flag:
+  - h: hidden. Code anti-debuggers
+  - d: autodestroy, after running the code it's removed (zero'ed)
+  - e: encrypted, repeat per layer
+```
+
+## ROM operations
+
+```plain
+Structure:
+00 = next node in the linked list
+04 =
+08 = struct wtih start of linked list at +8 (0x0206E8A0)
+0C = init to 0x2300. If bit0 set, throw exception. OR with arg1 (op) in bit8-bit15. Bit3 set if arg2 is not zero
+10 = ptr to payload
+14 = 6 when 08 is zero and return. 2 otherwise for now
+
+Hard-coded ptr:
+00 =
+04 =
+08 = if bit7 is set, skip things.
+0C =
+10 =
+14 =
+18 =
+1C =
+
+Operations:
+7 | 1 = payload: 0xFFFF, input ptr, start + end ptr, 0
+```

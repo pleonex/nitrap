@@ -1,0 +1,186 @@
+namespace Nitraper
+{
+    using System;
+    using Yarhl.IO;
+
+    /// <summary>
+    /// Variant of ARCFOUR found in anti-piracy code of Nintendo DS games.
+    /// </summary>
+    public class Rc4N
+    {
+        const int S_LENGTH = 256;
+        const int K_INIT = 170; // hard-coded in game code
+
+        // The name are no the best but don't blame me.
+        // These are the same name of the "original" ARCFOUR algorithm.
+        readonly byte[] s;
+        int i;
+        int j;
+        int k;
+
+        private Rc4N(byte[] key)
+        {
+            i = 0;
+            j = 0;
+            k = K_INIT;
+
+            s = new byte[S_LENGTH];
+            KeyScheduling(s, key);
+        }
+
+        public static void Decrypt(uint seed, DataStream input, DataStream output)
+        {
+            byte[] key = GenerateKey(seed, (uint)input.Length);
+
+            var rc4n = new Rc4N(key);
+            rc4n.Run(input, output);
+        }
+
+        static byte[] GenerateKey(uint seed, uint inputLength)
+        {
+            byte[] key = new byte[16]; // 16 * 8 = 128 bits of key             |
+            uint keyPart = seed ^ inputLength;
+            BitConverter.TryWriteBytes(key.AsSpan(0, 4), keyPart);
+
+            keyPart = ((seed >> 24) | (seed << 8)) ^ inputLength;
+            BitConverter.TryWriteBytes(key.AsSpan(4, 4), keyPart);
+
+            keyPart = ((seed >> 16) | (seed << 16)) ^ inputLength;
+            BitConverter.TryWriteBytes(key.AsSpan(8, 4), keyPart);
+
+            keyPart = ((seed >> 8) | (seed << 24)) ^ inputLength;
+            BitConverter.TryWriteBytes(key.AsSpan(12, 4), keyPart);
+
+            return key;
+        }
+
+        static void KeyScheduling(byte[] s, byte[] key)
+        {
+            // The game has an optimization to initialize the buffer quickly
+            // by writing 32-bit values (using the char * as uint *).
+            // In C# that's not recommended so we do the byte a byte one.
+            // Anyway it's just a quick 256 iteration loop...
+            for (int i = 0; i < s.Length; i++) {
+                s[i] = (byte)i;
+            }
+
+            // The difference with the "standard" ARCFOUR is that we iterate
+            // backwards.
+            int keyIdx = 0;
+            int j = 0;
+            for (int i = s.Length - 1; i >= 0; i--) {
+                j = (j + s[i] + key[keyIdx]) % s.Length;
+                keyIdx = keyIdx == key.Length - 1 ? 0 : keyIdx + 1;
+
+                byte swap = s[i];
+                s[i] = s[j];
+                s[j] = swap;
+            }
+        }
+
+        void  Run(DataStream input, DataStream output)
+        {
+            var reader = new DataReader(input);
+            while (!input.EndOfStream)
+            {
+                uint data = reader.ReadUInt32();
+
+                int mode = GetMode(data);
+                if (mode == 1 || mode == 3)
+                {
+                    DecryptK(data, output);
+                }
+                else if (mode == 2)
+                {
+                    Decrypt32Xored(data, output);
+                }
+                else if (mode == 0)
+                {
+                    Decrypt32(data, output);
+                }
+            }
+        }
+
+        static int GetMode(uint data)
+        {
+            uint flag = data >> 24;
+            if ((flag & 0x0E) != 0x0A)
+            {
+                return 0;
+            }
+
+            if ((flag & 0xF0) == 0xF0)
+            {
+                return 1;
+            }
+
+            if ((flag & 0x01) == 0x01)
+            {
+                return 2;
+            }
+
+            return 3;
+        }
+
+        byte NextRandom()
+        {
+            i = (k + i + 1) & 0xFF;
+            j = (k + j + s[i]) & 0xFF;
+
+            byte swap = s[i];
+            s[i] = s[j];
+            s[j] = swap;
+
+            int index = (s[i] + s[j]) & 0xFF;
+            return s[index];
+        }
+
+        void DecryptK(uint data, DataStream output)
+        {
+            uint value = data & 0x00FFFFFF;
+            value -= 2114;
+            value &= 0x00FFFFFF;
+
+            uint flag = data >> 24;
+            k += (byte)flag;
+
+            flag ^= 0x01;
+            value |= flag << 24;
+            output.Write(BitConverter.GetBytes(value), 0, 4);
+        }
+
+        void Decrypt32Xored(uint data, DataStream output)
+        {
+            // Decrypt bytes 0, 1 and 2 with regular ARCFOUR XOR operations
+            for (int i = 0; i < 3; i++)
+            {
+                byte encrypted = (byte)((data >> (i * 8)) & 0xFF);
+                byte random = NextRandom();
+                output.WriteByte((byte)(encrypted ^ random ^ 0x00));
+
+                k = encrypted;
+            }
+
+            byte flag = (byte)(data >> 24);
+            k -= flag;
+            output.WriteByte((byte)(flag ^ 0x01));
+        }
+
+        void Decrypt32(uint data, DataStream output)
+        {
+            // Decrypt bytes 0, 1 and 2 with regular ARCFOUR XOR operations
+            for (int i = 0; i < 3; i++)
+            {
+                byte encrypted = (byte)((data >> (i * 8)) & 0xFF);
+                byte random = NextRandom();
+                output.WriteByte((byte)(encrypted ^ random));
+
+                k = encrypted;
+            }
+
+            byte flag = (byte)(data >> 24);
+            k -= flag;
+            output.WriteByte(flag);
+        }
+    }
+}
