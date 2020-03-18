@@ -2,10 +2,17 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <AssemblyName>Nitraper</AssemblyName>
+
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20158.1" />
     <PackageReference Include="Yarhl" Version="3.0.0-alpha10" />
   </ItemGroup>
+
 </Project>

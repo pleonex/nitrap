@@ -1,19 +1,46 @@
+// Copyright (c) 2020 Benito Palacios Sánchez (pleonex)
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 namespace Nitraper
 {
+    using System;
     using Yarhl.IO;
 
     public static class Checksum
     {
-        const uint DATA_SIZE = 0x24;
-
-        public static uint Run(DataStream stream)
+        public static uint Compute(DataStream stream, uint size)
         {
+            if ((size % 4) != 0) {
+                Console.WriteLine("!ERROR: Invalid size to calculate checksum");
+                return 0xFFFFFFFF; // unsigned -1
+            }
+
             var reader = new DataReader(stream);
 
             uint checksum = 0;
-            for (int i = 0; i < DATA_SIZE / 4; i++) {
+            for (int i = 0; i < size / 4; i++) {
                 uint data = reader.ReadUInt32();
+
+                // Move lower 5 bits into the higher part
                 data = (data << 27) | (data >> 5);
+
+                // XOR with the current result
                 checksum ^= data;
             }
 
