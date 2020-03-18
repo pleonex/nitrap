@@ -1,3 +1,5 @@
 # .NET outputs
 bin/
 obj/
+people/
+.vs/

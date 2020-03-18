@@ -8,8 +8,9 @@ non-authorized hardware (i.e.: flashcards) or it has been modified.
 Many games implement anti-piracy detection mechanims. This is the kind of
 patches that flashcard try to apply to make it work.
 
-- [ ] Research anti-piracy in Ninokuni
-- [ ] Reserach anti-pirace in Pokémon
+- [ ] WIP: Research anti-piracy in Ninokuni
+- [ ] Research anti-piracy in Metal Max 3
+- [ ] Reserach anti-piracy in Pokémon
 
 ## Save editing prevention
 
@@ -33,7 +34,7 @@ usually the case for files with text, image and font content.
 - [ ] Document Pokémon (see [airorom](https://github.com/pleonex/AiroRom))
 - [ ] Document Ninokuni (see [airorom](https://github.com/pleonex/AiroRom))
 
-## Code signature (0%)
+## Code signature
 
 The developers may be signing the files with code to prevent modifications.
 
