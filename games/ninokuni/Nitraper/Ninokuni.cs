@@ -85,6 +85,9 @@ namespace Nitraper
                 { 0x02175b00, 0x0215d0d8, 0x0215e44c },
                 { 0x0216F306, 0x0215D87C, 0x0215E388 },
                 { 0x0216D1F2, 0x0215C2F0, 0x0215E3DC },
+                { 0x02175760, 0x0215CDA0, 0x0215E44C },
+                { 0x0216F5B6, 0x0215DAB4, 0x0215E5F0 },
+                { 0x0216D452, 0x0215C528, 0x0215E3DC },
             };
 
             for (int i = 0; i < encryptInfo.GetLength(0); i++) {
@@ -95,6 +98,7 @@ namespace Nitraper
                 offset -= config.OverlayRamAddress;
                 using (var input = new DataStream(stream, offset, length))
                 using (var output = new DataStream(stream, offset, length)) {
+                    Console.WriteLine($"* RC4N {offset:X4}h - {length:X4}h");
                     Rc4N.Decrypt(seed, input, output);
                 }
             }
@@ -103,9 +107,9 @@ namespace Nitraper
         static void PredictCorrectAnswer()
         {
             uint xBase = 0x0030EB87;
-            Func<uint, double> equation =
-                (uint x) => x - ((x * 0x10FEF011L) / 68719476736.0) * 0xF1;
-            Func<uint, uint, double> total =
+            Func<uint, uint> equation =
+                (uint x) => x - (uint)((x * 0x10FEF011L) >> (32 + 4)) * 0xF1;
+            Func<uint, uint, uint> total =
                 (uint x1, uint x2) => equation(xBase + x1 + x2);
 
             Console.WriteLine(total(173 * 251, 48443));
