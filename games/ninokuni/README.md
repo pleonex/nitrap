@@ -65,6 +65,14 @@ thanks to some basic emulation capabilities).
 However we can't find that code in any overlay. So I set a breakpoint to know
 when this code is copied and from where. The answer is amazing: it's decrypted:
 
+## Onion obfuscation
+
+1. ap_start_boot1
+2. - ap19he_run1_call_lv1
+3. ap19hee_run1_lv1
+4. - ap19he_run1_call_lv2_1
+5. ap19hee_run1_lv2_1
+
 ## Encrypted entrypoints
 
 - [0x0215C014, 0x0215C038) - 0x0024
