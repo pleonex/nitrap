@@ -1,5 +1,38 @@
 # Ni no kuni
 
+## TODO
+
+- [x] Find first AP algorithm
+- [x] Find the other starting AP
+- [ ] Create program to decrypt methods
+  - [x] Initial working version
+  - [ ] Refactor program to use config file
+  - [ ] Add tests to program
+  - [ ] Create Ghidra script
+- [ ] Document general AP protection structure
+- [ ] Document first AP (boot)
+  - [x] Comment assembly code
+  - [ ] Document the _pass_ and _fail_ methods
+  - [ ] Create diagrams and doc
+- [ ] Document second AP (boot2)
+  - [ ] Comment assembly code
+  - [ ] Document the _pass_ and _fail_ methods
+  - [ ] Create diagrams and doc
+- [ ] Document third AP (start menu)
+  - [ ] Comment assembly code
+  - [ ] Document the _pass_ and _fail_ methods
+  - [ ] Create diagrams and doc
+- [ ] Document forth AP (before video)
+  - [ ] Comment assembly code
+  - [ ] Document the _pass_ and _fail_ methods
+  - [ ] Create diagrams and doc
+- [ ] Document fifth AP (after video)
+  - [ ] Comment assembly code
+  - [ ] Document the _pass_ and _fail_ methods
+  - [ ] Create diagrams and doc
+
+## Research
+
 The anti-piracy patch was created by _Rudolph_ and it is the following:
 
 ```plain
@@ -67,52 +100,136 @@ when this code is copied and from where. The answer is amazing: it's decrypted:
 
 ## Onion obfuscation
 
-1. ap_start_boot1
-2. - ap19he_run1_call_lv1
-3. ap19hee_run1_lv1
-4. - ap19he_run1_call_lv2_1
-5. ap19hee_run1_lv2_1
+The anti-piracy code runs from different methods. The piracy detection code
+seems to be provided with the NitroSDK as it was found in different games. There
+are different type of checks. Each check requires a "pass" and "fail" function
+in an array. The SDK code will run the check and then run the corresponding
+function. This allows developer to do different things to annoy pirate gamers.
 
-## Encrypted entrypoints
+In the case of _Ni no kuni_, the game stars the AP checks in different methods
+with this pattern:
 
-- [0x0215C014, 0x0215C038) - 0x0024
-- [0x0215C050, 0x0215C074) - 0x0024
-- [0x0215C08C, 0x0215C0B0) - 0x0024
-- [0x0215C0C8, 0x0215C0EC) - 0x0024
-- [0x0215B920, 0x0215B9B0) - 0x0090
-- [0x0215B5F8, 0x0215B6D4) - 0x00DC
-- [0x0215B528, 0x0215B5F0) - 0x00C8
-- [0x0215B6E0, 0x0215B748) - 0x0068
-- [0x0215A660, 0x0215A684) - 0x0024
-- [0x0215A69C, 0x0215A6C0) - 0x0024
-- [0x0215A6D8, 0x0215A6FC) - 0x0024
-- [0x0215A714, 0x0215A738) - 0x0024
-- [0x0215A7C0, 0x0215A844) - 0x0084
-- [0x0215A8A4, 0x0215A9C4) - 0x0120
-- [0x0215A9C8, 0x0215AB64) - 0x019C
-- [0x0215AB6C, 0x0215ABE0) - 0x0074
-- [0x0215ABE4, 0x0215AC58) - 0x0074
-- [0x0215A84C, 0x0215A8A4) - 0x0058
-- [0x0215B310, 0x0215B334) - 0x0024
-- [0x0215B34C, 0x0215B370) - 0x0024
-- [0x0215B388, 0x0215B3AC) - 0x0024
-- [0x0215B3C4, 0x0215B3E8) - 0x0024
+1. Unload overlay 20 because it overlaps with overlay 19.
+2. Load overlay 19 where all the AP code is.
+   - This puts into memory all the AP code from the overlay encrypted again.
+3. Decrypt the base anti-piracy methods from overlay 19.
+4. Store the pointer to the "pass" and "fail" functions in an array
+   1. The pointer of the array is global. The array has two elements.
+   2. The order of the functions in the array is random (frame counter)
+   3. There is a global integer variable with the value of the index to the
+      "fail" function.
+   4. The index to the "pass" function is the other index (global index XOR 1)
+5. Run a checksum to the first AP function and compare against a constant
+   1. The checksum runs for the first 32 bytes only because it's the size of the
+      first AP function (a jump function)
+   2. The checksum loads 32-bits and do `data = (data << 0x1B) | (data >> 0x05)`
+   3. Then XOR with the current value (initial 0)
+   4. If the checksum is different runs directly the "fail" function
+6. Run the AP code.
+7. Free the overlay 19
+8. Load the overlay 20
+
+### Base anti-piracy methods
+
+There are 4 groups of functions + 1 group defined in the base function itself:
+
+- Group 0: AP jump functions and CRC32
+- Group 1: AP RC4 encryption and decryption functions
+- Group 2: AP function check jump functions
+- Group 3: AP RC4 helpers
+- Group 4 (inside main function): AP main jump functions
+
+#### Function decryption
+
+For each group, it calls a decryption function that decrypts a list of functions
+with a simple XOR. It keeps decrypting until the function pointer is 0. The
+elements in the list are consecutively:
+
+- Function pointer + 0x2100
+- (Function size + 0x2100 + 0x0215C1CC) \* 16
+
+The decryption does a XOR with 32-bits values of data. The key starts with
+`0x7FEC9DF1` and in each iteration it changes by XOR'ing with the decrypted
+value as `decrypted - (decrypted >> 8))`,
+
+The decryption function first destroy the first 3 instructions of the calling
+function by writing 0. Then after decrypting each element in the list, write 0
+to that element. After decryption the jump function as well as the list of
+functions are destroyed so no one can find them in the RAM.
+
+The constant value in Ninokuni for the function size `0x0215C1CC` match the end
+of the overlay 19 where the AP code is. This value would potentially change from
+game to game, so the encrypted code is different between games.
+
+#### Encrypted entrypoints
+
+- Group 0:
+  - [0x0215C014, 0x0215C038) - 0x0024
+  - [0x0215C050, 0x0215C074) - 0x0024
+  - [0x0215C08C, 0x0215C0B0) - 0x0024
+  - [0x0215C0C8, 0x0215C0EC) - 0x0024
+  - [0x0215B920, 0x0215B9B0) - 0x0090
+- Group 1:
+  - [0x0215B5F8, 0x0215B6D4) - 0x00DC
+  - [0x0215B528, 0x0215B5F0) - 0x00C8
+  - [0x0215B6E0, 0x0215B748) - 0x0068
+- Group 2:
+  - [0x0215A660, 0x0215A684) - 0x0024
+  - [0x0215A69C, 0x0215A6C0) - 0x0024
+  - [0x0215A6D8, 0x0215A6FC) - 0x0024
+  - [0x0215A714, 0x0215A738) - 0x0024
+- Group 3:
+  - [0x0215A7C0, 0x0215A844) - 0x0084
+  - [0x0215A8A4, 0x0215A9C4) - 0x0120
+  - [0x0215A9C8, 0x0215AB64) - 0x019C
+  - [0x0215AB6C, 0x0215ABE0) - 0x0074
+  - [0x0215ABE4, 0x0215AC58) - 0x0074
+  - [0x0215A84C, 0x0215A8A4) - 0x0058
+- Group 4:
+  - [0x0215B310, 0x0215B334) - 0x0024
+  - [0x0215B34C, 0x0215B370) - 0x0024
+  - [0x0215B388, 0x0215B3AC) - 0x0024
+  - [0x0215B3C4, 0x0215B3E8) - 0x0024
+
+### Anti-piracy obfuscation
+
+There are 4 anti-piracy methods. Each of them are obfuscated using the same
+pattern as shown below. These functions accepts two arguments that are passed
+later to the _pass_ or _fail_ functions.
+
+1. Init challenge to a constant value (`0x0030EB87`)
+2. For each function to run (hard-coded in this function variables):
+   1. Check checksum of the jump function, if fails run _fail_ function.
+   2. Run jump function
+   3. Check if return is 0, then fail
+   4. Add the return value to the challenge
+3. Run a formula with the challenge, the result must be 0:
+   1. Multiply the challenge by another constant (`0x10FEF011`)
+   2. The higher 32-bits: divide by 16 and multiply by `0xF1`
+   3. Subtract the lower 32-bits to the challenge
+4. Run the _pass_ function with the two arguments.
+
+Typically it runs only two functions. The first one contains the actual AP
+detection code. The second one validates the bytes of the first function.
+
+#### Jump function
+
+Each of the anti-piracy functions (main, function 1 and function 2) run through
+a jump function. This function runs anti-debugger obfuscation code to just call
+to the ARC4 decrypt-run-encrypt function. The jump function contains the
+encryption seed, function offset and size.
+
+These jump functions were encrypted with the XOR algorithm from above. The ARC4
+functions from below as well.
+
+#### ARC4 encryption
+
+TODO
 
 ## ARM7 things
 
 - 0x02FFFC3C: it writes a frame counter. It's a shared area (firmware) so ARM9
   can access.
-
-## Function naming convention
-
-```plain
-<file><flag>_<name>
-file: ov<num> (we assume always from arm9). For ap replace ov for ap
-flag:
-  - h: hidden. Code anti-debuggers
-  - d: autodestroy, after running the code it's removed (zero'ed)
-  - e: encrypted, repeat per layer
-```
 
 ## ROM operations
 

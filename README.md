@@ -10,7 +10,7 @@ software including devices, flashcards and games.
    2. ROM format protection (0%)
    3. Firmware checks (0%)
 2. In-game protection
-   1. Game anti-piracy (**10%**)
+   1. Game anti-piracy (**25%**)
    2. Game saves anti-hacking protection (0%)
    3. Game anti-modding protection (0%)
    4. Code signature (0%)
