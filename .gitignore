@@ -1,5 +1,10 @@
 # .NET outputs
 bin/
 obj/
-people/
 .vs/
+
+# Ghidra project files non-sharable -> export as gar
+*.rep/
+*.gpr
+*.lock
+*.lock~

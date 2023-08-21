@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "games", "games", "{D597655E-0689-4D28-AC35-039C3431D8F2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ninokuni", "ninokuni", "{80F11DE7-73BB-4DD6-A555-72E5A4DA30D2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nitraper", "games\ninokuni\Nitraper\Nitraper.csproj", "{D261BF49-880E-4F32-8378-D99959A1FF45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scene", "scene", "{0BBAC990-BF8D-4755-97C3-09FF8D069A87}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DS-Scene_Rom_Tool", "DS-Scene_Rom_Tool", "{B3142AF7-A940-4689-BC7D-E3C5E489946A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesConsole", "scene\DS-Scene_Rom_Tool\DesConsole\DesConsole.csproj", "{86B16A0B-8F2F-4EFC-ACFF-3C737126C2A8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D261BF49-880E-4F32-8378-D99959A1FF45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D261BF49-880E-4F32-8378-D99959A1FF45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D261BF49-880E-4F32-8378-D99959A1FF45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D261BF49-880E-4F32-8378-D99959A1FF45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86B16A0B-8F2F-4EFC-ACFF-3C737126C2A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86B16A0B-8F2F-4EFC-ACFF-3C737126C2A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86B16A0B-8F2F-4EFC-ACFF-3C737126C2A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86B16A0B-8F2F-4EFC-ACFF-3C737126C2A8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{80F11DE7-73BB-4DD6-A555-72E5A4DA30D2} = {D597655E-0689-4D28-AC35-039C3431D8F2}
+		{D261BF49-880E-4F32-8378-D99959A1FF45} = {80F11DE7-73BB-4DD6-A555-72E5A4DA30D2}
+		{B3142AF7-A940-4689-BC7D-E3C5E489946A} = {0BBAC990-BF8D-4755-97C3-09FF8D069A87}
+		{86B16A0B-8F2F-4EFC-ACFF-3C737126C2A8} = {B3142AF7-A940-4689-BC7D-E3C5E489946A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {69B5FCFE-4D9E-4CFC-A1C1-B2C86EF7C154}
+	EndGlobalSection
+EndGlobal
