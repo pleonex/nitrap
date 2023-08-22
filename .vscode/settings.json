@@ -1,3 +1,6 @@
 {
-    "dotnet.defaultSolution": "nitrap.sln"
+    "dotnet.defaultSolution": "nitrap.sln",
+    "cSpell.words": [
+        "Nitraper"
+    ]
 }

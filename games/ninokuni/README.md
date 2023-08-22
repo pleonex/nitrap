@@ -146,7 +146,7 @@ with a simple XOR. It keeps decrypting until the function pointer is 0. The
 elements in the list are consecutively:
 
 - Function pointer + 0x2100
-- (Function size + 0x2100 + 0x0215C1CC) \* 16
+- Function size + 0x2100 + 0x0215C1CC
 
 The decryption does a XOR with 32-bits values of data. The key starts with
 `0x7FEC9DF1` and in each iteration it changes by XOR'ing with the decrypted
