@@ -24,7 +24,7 @@ namespace Nitraper
 
     public static class Checksum
     {
-        public static uint Compute(DataStream stream, uint size)
+        public static uint ComputeKind1(DataStream stream, int size)
         {
             if ((size % 4) != 0) {
                 Console.WriteLine("!ERROR: Invalid size to calculate checksum");
@@ -43,6 +43,31 @@ namespace Nitraper
                 // XOR with the current result
                 checksum ^= data;
             }
+
+            return checksum;
+        }
+
+        public static uint ComputeKind2(DataStream stream, int size)
+        {
+            if ((size % 4) != 0) {
+                throw new ArgumentException("!ERROR: Invalid size to calculate checksum", nameof(size));
+            }
+
+            var reader = new DataReader(stream);
+
+            size /= 4;
+            uint checksum = 0;
+            do
+            {
+                uint data = reader.ReadUInt32();
+
+                // shifting in C# more than 32 is problematic
+                // https://stackoverflow.com/questions/64548071/why-would-a-32-bit-shift-in-c-sharp-return-the-value-it-was-originally-shifting
+                int a = (byte)(0x20 - size);
+                uint b = (a >= 0x20) ? 0 : (data << a);
+                uint c = (size >= 0x20) ? 0 : (data >> size);
+                checksum ^= (b | c);
+            } while (--size > 0);
 
             return checksum;
         }

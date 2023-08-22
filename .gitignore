@@ -2,6 +2,7 @@
 bin/
 obj/
 .vs/
+launchSettings.json
 
 # Ghidra project files non-sharable -> export as gar
 *.rep/

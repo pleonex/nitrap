@@ -61,6 +61,25 @@ TODO
 
 TODO
 
+## AP jump checksum
+
+This one is different from the one found in
+[Ninokuni](../ninokuni/README.md#jump-function).
+
+The area to check is `0x25 * 4`. The initial value is `0`. For each 32-bits
+value:
+
+1. `a = (0x20 - remaining) & 0xFF`
+2. `b = input << a`
+3. `c = input >> remaining`
+4. `d = b | c`
+5. `checksum ^= d`
+
+> [!NOTE]  
+> In C# shifting operations with a value bigger or equal to 32 is not working as
+> on an ARM CPU. C# will do a mask to the first 5 bits (`& 0x1f`), while on the
+> CPU it will make it 0.
+
 ## How to find AP
 
 - Finding the XOR decryption function is easy (same between DS / DSi)

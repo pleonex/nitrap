@@ -26,10 +26,14 @@ namespace Nitraper
     {
         public static void Decrypt(string overlay19)
         {
-            var config = new Configuration {
+            var config = new AntiPiracyOverlayInfo {
                 OverlayRamAddress = 0x02159FE0,
                 AddressOffset = 0x2100,
-                ConstantOffset = 0x0215C1CC,
+                IntegerOffset = 0x0215C1CC,
+                InfrastructureEncryption = new()
+                {
+                    KeySeed = 0x7FEC9DF1,
+                },
             };
 
             using (var stream = DataStreamFactory.FromFile(overlay19, FileOpenMode.ReadWrite)) {
@@ -40,10 +44,8 @@ namespace Nitraper
             }
         }
 
-        static void DecryptEntrypoints(DataStream stream, Configuration config)
+        static void DecryptEntrypoints(DataStream stream, AntiPiracyOverlayInfo config)
         {
-            const uint EntrypointSeed = 0x7FEC9DF1;
-
             uint[] decryptionCalls = new uint[] {
                 0x0215c104,
                 0x0215b750,
@@ -54,13 +56,13 @@ namespace Nitraper
 
             foreach (uint call in decryptionCalls) {
                 stream.Position = call - config.OverlayRamAddress;
-                EntrypointDecrypter.DecryptFromCall(stream, EntrypointSeed, config);
+                EntrypointDecrypter.DecryptFromCall(stream, config);
             }
         }
 
-        static void VerifyJumpChecksums(DataStream stream, Configuration config)
+        static void VerifyJumpChecksums(DataStream stream, AntiPiracyOverlayInfo config)
         {
-            const uint JumpFuncSize = 0x24;
+            const int JumpFuncSize = 0x24;
 
             uint[,] checksums = new uint[,] {
             //  offset      checksum
@@ -73,12 +75,12 @@ namespace Nitraper
                 uint offset = checksums[i, 0] - config.AddressOffset;
                 stream.Position = offset - config.OverlayRamAddress;
 
-                uint checksum = Checksum.Compute(stream, JumpFuncSize);
+                uint checksum = Checksum.ComputeKind1(stream, JumpFuncSize);
                 Console.WriteLine($"Checksum: {checksum == checksums[i, 1]}");
             }
         }
 
-        static void DecryptApCode(DataStream stream, Configuration config)
+        static void DecryptApCode(DataStream stream, AntiPiracyOverlayInfo config)
         {
             uint[,] encryptInfo = new uint[,] {
             //    seed        offset      length
@@ -91,9 +93,9 @@ namespace Nitraper
             };
 
             for (int i = 0; i < encryptInfo.GetLength(0); i++) {
-                uint seed = encryptInfo[i, 0] - config.ConstantOffset - config.AddressOffset;
+                uint seed = encryptInfo[i, 0] - config.IntegerOffset - config.AddressOffset;
                 uint offset = encryptInfo[i, 1] - config.AddressOffset;
-                uint length = encryptInfo[i, 2] - config.ConstantOffset - config.AddressOffset;
+                uint length = encryptInfo[i, 2] - config.IntegerOffset - config.AddressOffset;
 
                 offset -= config.OverlayRamAddress;
                 using (var input = new DataStream(stream, offset, length))

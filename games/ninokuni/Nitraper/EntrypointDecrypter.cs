@@ -26,7 +26,7 @@ namespace Nitraper
     {
         const uint CallFuncSize = 0x0C;
 
-        public static void DecryptFromCall(DataStream stream, uint seed, Configuration config)
+        public static void DecryptFromCall(DataStream stream, AntiPiracyOverlayInfo config)
         {
             var reader = new DataReader(stream);
 
@@ -41,14 +41,14 @@ namespace Nitraper
             while (offset > 0x00) {
                 // Deobfuscate the offset and size
                 offset -= config.AddressOffset;
-                size -= config.ConstantOffset + config.AddressOffset;
+                size -= config.IntegerOffset + config.AddressOffset;
                 Console.WriteLine($"* [0x{offset:X8}, 0x{offset + size:X8}) - 0x{size:X4}");
 
                 // Convert the RAM address to a file address
                 offset -= config.OverlayRamAddress;
 
                 // Decrypt and return to current address
-                stream.RunInPosition(() => Decrypt(stream, size, seed), offset);
+                stream.RunInPosition(() => Decrypt(stream, size, config.InfrastructureEncryption.KeySeed), offset);
 
                 // Read next block
                 offset = reader.ReadUInt32();
@@ -56,7 +56,7 @@ namespace Nitraper
             }
         }
 
-        static void Decrypt(DataStream stream, uint size, uint seed)
+        public static void Decrypt(DataStream stream, uint size, uint seed)
         {
             uint key = seed;
             var reader = new DataReader(stream);
