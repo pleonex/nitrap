@@ -42,7 +42,7 @@ namespace Nitraper
                 // Deobfuscate the offset and size
                 offset -= config.AddressOffset;
                 size -= config.IntegerOffset + config.AddressOffset;
-                Console.WriteLine($"* [0x{offset:X8}, 0x{offset + size:X8}) - 0x{size:X4}");
+                Console.WriteLine($"* [0x{offset:X8}, 0x{offset + size:X8}) - 0x{size:X4} @ 0x{offset - config.OverlayRamAddress:X4}");
 
                 // Convert the RAM address to a file address
                 offset -= config.OverlayRamAddress;

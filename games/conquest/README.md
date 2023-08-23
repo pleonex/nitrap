@@ -1,5 +1,20 @@
 # Anti-piracy in Pokémon Conquest (VPYP)
 
+## Flow summary
+
+Before any call, run `DecryptGroups` to run the XOR decryption over all the AP
+infrastructure code: jumper functions and RC4N algorithm.
+
+To call any of the end AP functions the flow is:
+
+1. Jumper function:
+   1. In its data pool there is the AP address, size.
+   2. The key seed is generated from the checksum fo `DecryptRunEncrypt`
+   3. Call `DecryptRunEncrypt`
+      1. Decrypt AP code with RC4N
+      2. Run AP code -- it may call other AP repeating the flow
+      3. Encrypt AP code with RC4N
+
 ## Flow overlay 8
 
 _Close to the start of the init / main function._
@@ -18,9 +33,54 @@ _Close to the start of the init / main function._
    3. Free the overlay
    4. Do initialization stuff with a structure passed into this function
 
-### AP 0
+### To the AP code
 
-TODO
+1. Call AP jumper method
+   1. De-obfuscate address of next call `DecryptRunEncrypt`
+   2. Do checksum of next function for the seed of the encrypted AP code.
+   3. Save return address in data pool as well
+   4. Call `DecryptRunEncrypt`
+      1. Decrypt target AP with RC4N
+      2. Run target AP with arguments
+         1. Call AP check 0 via jumper (XORed)
+            1. Call `DecryptRunEncrypt` for AP check 0
+         2. Call AP check 1 via jumper (XORed)
+            1. Call `DecryptRunEncrypt` for AP check 0
+         3. Call AP check 2 via jumper (XORed)
+            1. Call `DecryptRunEncrypt` for AP check 0
+         4. Call AP check 3 via jumper (XORed)
+            1. Call `DecryptRunEncrypt` for AP check 0
+      3. Encrypt target AP again
+      4. Return value from target AP
+
+### Overlay 8 - AP
+
+It does a challenge by calling 4 AP checks. Each check returns a value and it
+sums all of them, plus the initial value `0x30EB87`. At the end (`0x338F75`),
+multiply by `0x10FEF011` (division?), take the upper part and divide by 16. Then
+multiply by `0xF1` and subtract the result with the end value. It must be 0.
+
+It also verifies the checksum of each jump function. If it fails call same
+function as the main function (`02215C38`).
+
+#### Overlay 8 - AP 0
+
+Check byte by byte jump function for AP 1. If bytes are different, return
+`0xA99F`, if not `0xA2DD`.
+
+#### Overlay 8 - AP 1
+
+It looks like the MAC and firmware check of _no$gba_ emulator. Returns
+`0xF1 * 0xBF` on success, `0xFB * 0xBF` if fails.
+
+#### Overlay 8 - AP 2
+
+TODO: same as Ninokuni AP2.
+
+#### Overlay 8 - AP 3
+
+Check byte by byte jump function for AP 2. If bytes are different, return
+`0xA99F`, if not `0xA2DD`.
 
 ## Flow overlay 9
 
