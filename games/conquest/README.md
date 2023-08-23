@@ -1,5 +1,8 @@
 # Anti-piracy in Pokémon Conquest (VPYP)
 
+It looks like overlay 8 contains the AP for DS checks, adapted for DSi (with the
+new jump functions). Overlay 9 has new AP code for DSi.
+
 ## Flow summary
 
 Before any call, run `DecryptGroups` to run the XOR decryption over all the AP
@@ -15,11 +18,11 @@ To call any of the end AP functions the flow is:
       2. Run AP code -- it may call other AP repeating the flow
       3. Encrypt AP code with RC4N
 
-## Flow overlay 8
+## DS AP
 
 _Close to the start of the init / main function._
 
-### To the overlay 8 AP jump function
+### DS - AP initialization
 
 1. Call dedicated function `0x02071be4` from arm9.
    1. Load overlay 8
@@ -33,7 +36,7 @@ _Close to the start of the init / main function._
    3. Free the overlay
    4. Do initialization stuff with a structure passed into this function
 
-### To the AP code
+### DS - AP flow
 
 1. Call AP jumper method
    1. De-obfuscate address of next call `DecryptRunEncrypt`
@@ -53,7 +56,7 @@ _Close to the start of the init / main function._
       3. Encrypt target AP again
       4. Return value from target AP
 
-### Overlay 8 - AP
+### DS - AP main
 
 It does a challenge by calling 4 AP checks. Each check returns a value and it
 sums all of them, plus the initial value `0x30EB87`. At the end (`0x338F75`),
@@ -63,32 +66,32 @@ multiply by `0xF1` and subtract the result with the end value. It must be 0.
 It also verifies the checksum of each jump function. If it fails call same
 function as the main function (`02215C38`).
 
-#### Overlay 8 - AP 0
+#### DS - AP 0
 
 Check byte by byte jump function for AP 1. If bytes are different, return
 `0xA99F`, if not `0xA2DD`.
 
-#### Overlay 8 - AP 1
+#### DS - AP 1
 
 It looks like the MAC and firmware check of _no$gba_ emulator. Returns
 `0xF1 * 0xBF` on success, `0xFB * 0xBF` if fails.
 
-#### Overlay 8 - AP 2
+#### DS - AP 2
 
 TODO: same as Ninokuni AP2.
 
-#### Overlay 8 - AP 3
+#### DS - AP 3
 
 Check byte by byte jump function for AP 2. If bytes are different, return
 `0xA99F`, if not `0xA2DD`.
 
-## Flow overlay 9
+## DSi AP
 
 _Everywhere in the game. Found calls before starting the main game loop, before
 loading world map (overlay 0) or before starting a battle (overlay 2). Each time
 the same flow repeats, looks like a macro or copy/pasted code._
 
-### To the overlay 9 AP jump function
+### DSi - AP initialization
 
 1. Free overlay 7
 2. Load overlay 9
@@ -104,6 +107,8 @@ the same flow repeats, looks like a macro or copy/pasted code._
          2. Flip bit0 (XOR)
          3. Call the function at `0x02218964 + (bit0 * 4)` with arg `0`. The
             first function is `0x020A90DC`, second is `0x020A909C`.
+
+### DSi - AP flow
 
 ### AP 1
 
@@ -121,7 +126,27 @@ TODO
 
 TODO
 
-## AP jump checksum
+## Infrastructure functions
+
+The following functions are involved in the anti-piracy checks in order or call:
+
+- Main group XOR decrypt
+- Group XOR decrypt
+- XOR decrypt
+- [XORed] Jump function
+- [XORed] RC4N - Decrypt-Run-Encrypt
+- [XORed] RC4N - DecryptWrapper
+- [XORed] RC4N - Decrypt
+- [XORed] RC4N - KSA
+- [XORed] RC4N - DoDecrypt
+- [XORed] RC4N - GetMode
+- [XORed] RC4N - PRGA NextRandom
+- [XORed] RC4N - EncryptWrapper
+- [XORed] RC4N - Encrypt
+- [XORed] RC4N - DoEncrypt
+- [XORed] Compute CRC32
+
+### AP jump checksum
 
 This one is different from the one found in
 [Ninokuni](../ninokuni/README.md#jump-function).
@@ -158,3 +183,6 @@ value:
 2. Get the 5 entrypoint functions
    - From overlay static initializer
    - Finding main entrypoint (tracking from breakpoint)
+3. Get the jump functions and their expected checksum
+   - Verify checksum
+   - Get key seed and address for RC4N encrypted code
